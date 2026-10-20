@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "coxrmstsimpson"
+version = "0.2.2"
+description = "Restricted mean survival time from Cox models using composite Simpson's rule"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Ian Forde", email = "fordeia@appstate.edu" }]
+dependencies = ["numpy>=1.23", "pandas>=1.5", "scipy>=1.10", "matplotlib>=3.6", "lifelines>=0.28"]
+
+[project.urls]
+Homepage = "https://github.com/fordeia/CoxRMSTSimpson"
+Repository = "https://github.com/fordeia/CoxRMSTSimpson"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/coxrmstsimpson"]
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src/coxrmstsimpson",
+    "README.md",
+    "pyproject.toml",
+    "LICENSE",
+]
