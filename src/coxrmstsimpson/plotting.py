@@ -10,40 +10,26 @@ def plot_cox_rmst(
     title=None,
     show=True,
 ):
-    """Plot predicted survival curves and shade their RMST areas.
-
-    Parameters
-    ----------
-    result : dict
-        Result returned by cox_rmst().
-    ax : matplotlib.axes.Axes, optional
-        Existing axes on which to draw the plot.
-    labels : sequence of str, optional
-        Custom labels for profiles in the order plotted.
-    show_rmst : bool, default False
-        Include each profile's RMST estimate in the legend.
-    title : str, optional
-        Custom title. Defaults to a title containing tau.
-    show : bool, default True
-        Call matplotlib.pyplot.show() before returning.
-    """
+    """Plot survival curves with user-supplied category labels."""
     if not isinstance(result, dict) or "curves" not in result or "tau" not in result:
         raise TypeError("result must be returned by cox_rmst().")
 
     curves = result["curves"]
     profiles = list(curves.groupby("profile", sort=False))
+    results_table = result.get("results")
 
     if labels is not None:
         labels = list(labels)
         if len(labels) != len(profiles):
             raise ValueError(
-                f"Provide one custom label for each profile ({len(profiles)} required)."
+                f"Provide one label per profile ({len(profiles)} required)."
             )
 
-    results_table = result.get("results")
-    if show_rmst:
-        if results_table is None or not {"profile", "RMST"}.issubset(results_table.columns):
-            raise ValueError("RMST results are unavailable in result['results'].")
+    if show_rmst and (
+        results_table is None
+        or not {"profile", "RMST"}.issubset(results_table.columns)
+    ):
+        raise ValueError("RMST results are unavailable.")
 
     if ax is None:
         _, ax = plt.subplots()
@@ -57,19 +43,18 @@ def plot_cox_rmst(
                 results_table["profile"] == profile, "RMST"
             ]
             if matching.empty:
-                raise ValueError(f"Could not find an RMST estimate for profile {profile!r}.")
-            curve_label = f"{curve_label} (RMST = {matching.iloc[0]:.3f})"
+                raise ValueError(f"Missing RMST estimate for {profile!r}.")
+            curve_label += f" (RMST = {matching.iloc[0]:.3f})"
 
         ax.plot(data["time"], data["survival"], label=curve_label)
         ax.fill_between(data["time"], data["survival"], 0, alpha=0.18)
 
-    default_title = f"Restricted mean survival time (tau = {result['tau']:g})"
     ax.set(
         xlim=(0, result["tau"]),
         ylim=(0, 1.02),
         xlabel="Time",
         ylabel="Predicted survival probability",
-        title=title if title is not None else default_title,
+        title=title or f"Restricted mean survival time (tau = {result['tau']:g})",
     )
     ax.legend()
     ax.grid(alpha=0.25)
